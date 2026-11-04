@@ -86,3 +86,22 @@ jobs:
           name: report-${{ github.run_id }}
           path: reports/${{ github.run_id }}
           retention-days: 30
+
+      - name: Package the site for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  # Requires Settings -> Pages -> Source: "GitHub Actions"
+  deploy:
+    needs: analyze
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

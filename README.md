@@ -70,7 +70,7 @@ Every scheduled run also publishes a static dashboard to the `gh-pages` branch:
 
 It has the same daily view as the app (market cards, best setups, alerts, sortable watchlist) and a page per stock with interactive charts, the trade plan, checklist, news and score history. A **History** tab keeps a snapshot of every run. No server is needed: the page reads JSON files that the workflow commits.
 
-**One-time setup:** Settings → Pages → *Build and deployment* → Source: **Deploy from a branch**, Branch: **gh-pages** / **(root)** → Save.
+**One-time setup:** Settings → Pages → *Build and deployment* → Source: **GitHub Actions**. The workflow deploys the site itself. The `gh-pages` branch is only where past data is stored.
 
 To change the watchlist, edit `config.yaml` on GitHub. The next run picks it up, or you can start one from Actions → Daily Stock Analysis → Run workflow.
 
