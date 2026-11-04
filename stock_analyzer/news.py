@@ -52,6 +52,21 @@ def is_relevant(title: str, kws: set[str]) -> bool:
     return any(re.search(rf"(?<![\w]){re.escape(k)}(?![\w])", t) for k in kws)
 
 
+# Quote/chart pages that news search returns as if they were headlines
+_JUNK = re.compile(
+    r"stock price, news, quote|quote (and|&) history|charts?, data (and|&) news|seasonal returns chart|"
+    r"interactive (stock )?chart|price today,? live chart|historical (stock )?prices|stock quote\b",
+    re.IGNORECASE,
+)
+
+
+def is_headline(title: str) -> bool:
+    raw = (title or "").strip()
+    if not raw or raw[0] in "-–—|":  # title missing, only " - Source" left
+        return False
+    return len(raw) >= 12 and not _JUNK.search(raw)
+
+
 def _iso(published: str) -> str:
     try:
         return parsedate_to_datetime(published).astimezone(timezone.utc).isoformat()
@@ -77,6 +92,8 @@ def google_news(query: str, locale: str = "hl=en-US&gl=US&ceid=US:en", limit: in
         title = e.get("title", "")
         if src and title.endswith(f" - {src}"):
             title = title[: -len(src) - 3]
+        if not is_headline(title):
+            continue
         out.append({"title": title, "link": e.get("link", ""), "source": src,
                     "published": _iso(e.get("published", ""))})
     return out
@@ -91,7 +108,7 @@ def fetch_news(provider, symbol: str, name: str, locale: str, limit: int = 5,
     def take(items):
         for it in items:
             title = it.get("title", "")
-            if title and title not in seen and is_relevant(title, kws):
+            if title and title not in seen and is_headline(title) and is_relevant(title, kws):
                 seen.add(title)
                 out.append(it)
                 if len(out) >= limit:

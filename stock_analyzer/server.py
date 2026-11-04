@@ -24,7 +24,7 @@ import yaml
 
 from .analysis import analyze, index_snapshot
 from .data import StockData, get_provider
-from .markets import MARKETS, detect_market
+from .markets import _SUFFIX_MARKET, MARKETS, detect_market
 from .news import fetch_news, google_news
 from .site import _num, compact_series
 from .universe import MARKET_NEWS_QUERIES, NAMES, SECTORS, UNIVERSE
@@ -250,7 +250,9 @@ class LiveService:
         remote = self.cache.get(f"q:{ql}", 3600, lambda: self.provider.search(q, 10))
         seen, out = set(), []
         for r in local + remote:
-            if r["symbol"] not in seen:
+            sym = r["symbol"].upper()
+            supported = "." not in sym or any(sym.endswith(suf) for suf in _SUFFIX_MARKET)
+            if supported and r["symbol"] not in seen:
                 seen.add(r["symbol"])
                 out.append({**r, "market": detect_market(r["symbol"])})
         return out[:15]

@@ -205,3 +205,29 @@ def test_server_news_and_search(tmp_path):
     assert times == sorted(times, reverse=True)
     assert c.get("/api/news?scope=watchlist").json()["items"]
     assert "HDFCBANK.NS" in [r["symbol"] for r in c.get("/api/search?q=hdfc").json()["results"]]
+
+
+@pytest.mark.parametrize("title,ok", [
+    ("HANG SENG INDEX (^HSI) interactive stock chart - Yahoo Finance", False),
+    ("Hang Seng Index (^HSI) Seasonal returns chart", False),
+    ("Apple Inc. (AAPL) stock price, news, quote and history", False),
+    ("STOXX 600 (^STOXX) charts, data and news", False),
+    ("– The HinduBusinessLine", False),
+    ("Hang Seng Index closes shy of 24,000 points", True),
+    ("Reliance stock price jumps 3% after record quarterly profit", True),
+])
+def test_headline_filter(title, ok):
+    from stock_analyzer.news import is_headline
+    assert is_headline(title) is ok
+
+
+def test_search_drops_unsupported_markets(tmp_path, monkeypatch):
+    c, _ = _client(tmp_path)
+    svc = c.app.state.service
+    monkeypatch.setattr(svc.provider, "search", lambda q, n: [
+        {"symbol": "TM", "name": "Toyota ADR", "exchange": "NYSE", "type": "EQUITY"},
+        {"symbol": "7203.T", "name": "Toyota", "exchange": "Tokyo", "type": "EQUITY"},
+        {"symbol": "4707.KL", "name": "Nestle Malaysia", "exchange": "KLSE", "type": "EQUITY"},
+        {"symbol": "TMPV.NS", "name": "Tata Motors PV", "exchange": "NSE", "type": "EQUITY"}])
+    syms = [r["symbol"] for r in c.get("/api/search?q=toyotaz").json()["results"]]
+    assert syms == ["TM", "TMPV.NS"]
