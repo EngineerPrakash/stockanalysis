@@ -1,0 +1,34 @@
+# Watchlist per market. Tickers use Yahoo Finance symbols.
+watchlist:
+  india:
+    - RELIANCE.NS
+    - TCS.NS
+    - HDFCBANK.NS
+    - INFY.NS
+    - ICICIBANK.NS
+  us:
+    - AAPL
+    - MSFT
+    - NVDA
+    - AMZN
+    - GOOGL
+  china:
+    - 600519.SS   # Kweichow Moutai (Shanghai)
+    - 000858.SZ   # Wuliangye (Shenzhen)
+    - 300750.SZ   # CATL
+    - 0700.HK     # Tencent (Hong Kong)
+    - 9988.HK     # Alibaba (Hong Kong)
+  europe:
+    - ASML.AS     # Amsterdam
+    - SAP.DE      # Xetra
+    - MC.PA       # LVMH, Paris
+    - NESN.SW     # Nestle, Zurich
+    - SHEL.L      # Shell, London
+
+options:
+  period: 1y            # price history to download
+  max_bias_pct: 5.0     # flag "don't chase" when price is this % above MA5
+  news: true            # Yahoo + Google News RSS headlines
+  news_per_stock: 3
+  llm: false            # true = add commentary from an open-source LLM (see .env.example)
+  workers: 4

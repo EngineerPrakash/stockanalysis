@@ -1,0 +1,21 @@
+services:
+  dashboard:
+    build: .
+    command: streamlit run app.py --server.address=0.0.0.0
+    ports: ["8501:8501"]
+    env_file: [.env]
+  report:
+    build: .
+    command: python -m stock_analyzer --llm --notify
+    env_file: [.env]
+    environment:
+      LLM_BASE_URL: http://ollama:11434/v1
+    volumes: ["./reports:/app/reports"]
+    depends_on: [ollama]
+    profiles: ["report"]
+  ollama:
+    image: ollama/ollama:latest
+    volumes: ["ollama:/root/.ollama"]
+    profiles: ["report"]
+volumes:
+  ollama:
