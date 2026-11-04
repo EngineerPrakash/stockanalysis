@@ -79,8 +79,11 @@ class YahooProvider:
             link = (c.get("canonicalUrl") or {}).get("url") if isinstance(c.get("canonicalUrl"), dict) else c.get("link")
             prov = c.get("provider")
             source = (prov.get("displayName") if isinstance(prov, dict) else None) or c.get("publisher") or "Yahoo Finance"
+            published = c.get("pubDate") or c.get("displayTime") or ""
+            if not published and c.get("providerPublishTime"):
+                published = pd.Timestamp(c["providerPublishTime"], unit="s", tz="UTC").isoformat()
             if title:
-                out.append({"title": title, "link": link or "", "source": source})
+                out.append({"title": title, "link": link or "", "source": source, "published": published})
         return out
 
 

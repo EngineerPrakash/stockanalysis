@@ -69,12 +69,20 @@ def _dump(path: Path, obj) -> None:
 
 
 def _market_payload(m: dict, now: str) -> dict:
+    series = m.get("series") or {}
+    results = []
+    for r in m["results"]:
+        d = r.to_dict()
+        hist = series.get(r.symbol)
+        if hist is not None:
+            d["spark"] = [_num(v, 4) for v in hist["Close"].tail(60)]
+        results.append(d)
     return {
         "name": m["name"],
         "updated": now,
         "indices": m["indices"],
         "overview": m.get("overview", ""),
-        "results": [r.to_dict() for r in m["results"]],
+        "results": results,
     }
 
 

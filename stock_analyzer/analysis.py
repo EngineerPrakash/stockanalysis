@@ -237,6 +237,7 @@ def index_snapshot(data: StockData, label: str) -> dict:
         "change_pct": round(_pct(float(c.iloc[-1]), float(c.iloc[-2])), 2),
         "change_1m_pct": round(_pct(float(c.iloc[-1]), float(c.iloc[-22])), 2) if len(c) > 22 else 0.0,
         "above_ma50": bool(len(c) >= 50 and c.iloc[-1] > c.tail(50).mean()),
+        "spark": [round(float(v), 2) for v in c.tail(60)],
     }
 
 
