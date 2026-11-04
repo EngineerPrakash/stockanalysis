@@ -13,7 +13,7 @@ Each run produces a decision dashboard for your watchlist:
 - **Checklist**, fundamentals (P/E, P/B, ROE...), and news headlines
 - **Optional AI commentary** from a local open-source LLM (Ollama, LM Studio, vLLM, llama.cpp)
 - Reports in **Markdown, HTML and JSON**, sent to **Telegram, Discord, Slack, ntfy or email**
-- **Streamlit dashboard** with candlestick and indicator charts
+- **Daily web app** (Streamlit): market overview, best setups, alerts, charts, watchlist editor, report history
 
 ## Open-source stack
 
@@ -62,6 +62,27 @@ streamlit run app.py
 ```
 
 Reports are written to `reports/report_YYYY-MM-DD.{md,html,json}`.
+
+## Daily use: the web app
+
+```bash
+streamlit run app.py
+```
+
+This opens http://localhost:8501 with four pages:
+
+| Page | What you do there |
+|---|---|
+| 🌅 **Today** | Morning check: index cards for all four markets, the top-scoring setups with entry/stop/target, alerts (MACD and MA crossovers, overbought/oversold, extended, heavy volume), and a ranked table per market. Click any row or **Open** to see the stock. |
+| 📈 **Stock** | Candlestick chart with MA20/50/200 and entry/stop/target lines, MACD and RSI panels, trade plan, checklist, signals and risks, news, and an optional AI view. Type any ticker to look it up, even if it's not on your watchlist. |
+| ⭐ **Watchlist** | Add tickers (validated against live data) or remove them. Saved to `config.yaml`, which the scheduled report also reads. |
+| 📄 **Reports** | Create a full report for any markets, with news and AI, then download it as Markdown, HTML or JSON or send it to your channels. Past reports are listed here too. |
+
+In the sidebar you can switch to offline demo data, change the price history window, and refresh data. Prices are cached for 15 minutes.
+
+**A typical day:** open **Today** after the market closes, scan the best setups and alerts, open anything interesting on **Stock**, and adjust the **Watchlist**. Scheduled GitHub Actions reports arrive on your phone in between.
+
+**Use it from your phone:** deploy free on [Streamlit Community Cloud](https://streamlit.io/cloud). Choose *New app*, then this repo, then `app.py`. The cloud copy resets its files on restart, so make lasting watchlist changes by editing `config.yaml` on GitHub. Alternatively, run it on a home machine and open it on your LAN with `streamlit run app.py --server.address 0.0.0.0`.
 
 ## Ticker formats
 
@@ -157,7 +178,8 @@ stock_analyzer/
   report.py      Markdown / HTML / JSON output
   notify.py      Telegram, Discord, Slack, ntfy, email
   pipeline.py    orchestration
-app.py           Streamlit dashboard
+app.py           Streamlit web app (navigation)
+ui/              Today, Stock, Watchlist, Reports pages
 config.yaml      watchlists and options
 ```
 
