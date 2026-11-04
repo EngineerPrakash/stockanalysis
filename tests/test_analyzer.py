@@ -231,3 +231,62 @@ def test_search_drops_unsupported_markets(tmp_path, monkeypatch):
         {"symbol": "TMPV.NS", "name": "Tata Motors PV", "exchange": "NSE", "type": "EQUITY"}])
     syms = [r["symbol"] for r in c.get("/api/search?q=toyotaz").json()["results"]]
     assert syms == ["TM", "TMPV.NS"]
+
+
+# --- GitHub-backed watchlist --------------------------------------------------------------
+class _FakeGitHub:
+    """Minimal stand-in for the GitHub contents API."""
+
+    def __init__(self, text):
+        import base64
+        self.b64 = base64.b64encode(text.encode()).decode()
+        self.sha, self.puts, self.headers = "sha1", [], {}
+
+    def get(self, url, params=None, timeout=None):
+        return _Resp(200, {"sha": self.sha, "content": self.b64})
+
+    def put(self, url, json=None, timeout=None):
+        if json.get("sha") != self.sha:
+            return _Resp(409, {})
+        self.puts.append(json)
+        self.b64, self.sha = json["content"], f"sha{len(self.puts) + 1}"
+        return _Resp(200, {"content": {"sha": self.sha}})
+
+
+class _Resp:
+    def __init__(self, code, body):
+        self.status_code, self._body = code, body
+
+    def json(self):
+        return self._body
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise RuntimeError(self.status_code)
+
+
+def test_watchlist_syncs_to_github(tmp_path, monkeypatch):
+    import base64
+    import stock_analyzer.gitstore as gs
+    from stock_analyzer.server import LiveService
+
+    remote = "watchlist:\n  us: [AAPL]\n  india: []\n  china: []\n  europe: []\n"
+    fake = _FakeGitHub(remote)
+    monkeypatch.setattr(gs.requests, "Session", lambda: fake)
+    monkeypatch.setenv("GITHUB_TOKEN", "t")
+    monkeypatch.setenv("WATCHLIST_REPO", "me/repo")
+    svc = LiveService(demo=True, config=tmp_path / "config.yaml")
+    assert svc.watchlist()["us"] == ["AAPL"]            # loaded from GitHub at start-up
+    svc.set_watched("MSFT", True)
+    svc.store._pool.shutdown(wait=True)
+    assert len(fake.puts) == 1 and "[skip ci]" in fake.puts[0]["message"]
+    assert "MSFT" in base64.b64decode(fake.puts[0]["content"]).decode()
+
+
+def test_github_store_retries_on_conflict(monkeypatch):
+    import stock_analyzer.gitstore as gs
+    fake = _FakeGitHub("a: 1\n")
+    store = gs.GitHubStore("me/repo", "t", session=fake)
+    store.pull()
+    fake.sha = "changed-elsewhere"                      # someone edited config.yaml on GitHub
+    assert store.push("a: 2\n", "msg") is True and len(fake.puts) == 1

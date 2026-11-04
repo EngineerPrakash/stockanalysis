@@ -1,0 +1,21 @@
+# One-click deploy to Render (https://render.com): click "Deploy to Render" in the README.
+services:
+  - type: web
+    name: stock-analyzer
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/meta
+    autoDeploy: true
+    buildFilter:
+      ignoredPaths:          # watchlist commits from the app don't trigger a rebuild
+        - config.yaml
+        - reports/**
+        - "*.md"
+    envVars:
+      - key: ADMIN_TOKEN     # Render generates a random value; find it under Environment
+        generateValue: true
+      - key: WATCHLIST_REPO
+        value: EngineerPrakash/stockanalysis
+      - key: GITHUB_TOKEN    # paste a fine-grained token (Contents: read/write on this repo)
+        sync: false

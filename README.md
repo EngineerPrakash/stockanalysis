@@ -96,7 +96,33 @@ Notes:
 
 GitHub Pages can't run this server, because it only hosts static files. The published Pages dashboard stays the daily snapshot and detects that it isn't live.
 
-## Go live for free (Oracle Cloud + open-source stack)
+## Quickest way online: Render (about 5 minutes, free)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/EngineerPrakash/stockanalysis)
+
+Render works like Netlify, but it can run this app's server. (Netlify and Vercel only host static sites and short-lived functions, so they can serve the daily snapshot but not the live app.)
+
+1. **Deploy.** Click the button above and sign in to Render with GitHub. Render reads `render.yaml`, builds the `Dockerfile` and gives you an address like `https://stock-analyzer-xxxx.onrender.com`.
+2. **Keep your watchlist (recommended).** Free servers lose their files when they restart, so let the app save the watchlist to this repo:
+   - On GitHub, go to **Settings → Developer settings → Fine-grained tokens → Generate new token**. Choose **Only select repositories → stockanalysis**, then set **Repository permissions → Contents** to **Read and write**.
+   - Paste the token as `GITHUB_TOKEN` when Render asks, or later under the service's **Environment**.
+   - Each star you tap then becomes a commit to `config.yaml`. The scheduled daily report uses the same list, and these commits don't trigger a rebuild.
+3. **Find your admin token** under the service's **Environment → ADMIN_TOKEN**. The app asks for it the first time you edit the watchlist.
+
+Free-plan limits: the server sleeps after 15 minutes without visitors, and the first visit afterwards takes about a minute while it wakes up. Upgrading to Render's Starter plan keeps it always on. If Yahoo ever blocks Render's servers, prices won't load; the Oracle Cloud option below runs on your own server instead.
+
+**Similar quick options:**
+
+| Platform | Free plan | How |
+|---|---|---|
+| [Render](https://render.com) | Yes, sleeps when idle | Button above |
+| [Koyeb](https://www.koyeb.com) | 1 small instance, sleeps when idle | Create Web Service → GitHub → this repo, *Dockerfile* builder, port `8000`; add the same environment variables |
+| [Hugging Face Spaces](https://huggingface.co/spaces) | Yes, sleeps after 48 h idle | New Space → *Docker*, push this repo, set `PORT=7860` and the variables as Secrets |
+| [Railway](https://railway.app) / [Fly.io](https://fly.io) | Trial credit, then about $5/month | Deploy from GitHub; always on |
+
+All of them run the same `Dockerfile`, and `GITHUB_TOKEN` keeps the watchlist safe on any of them.
+
+## Go live for free, always on (Oracle Cloud + open-source stack)
 
 This puts the live app on the internet at an HTTPS address you can open from your phone anywhere. It costs nothing on Oracle Cloud's **Always Free** tier, and everything running on the server is open source: Ubuntu, Docker, Caddy (automatic HTTPS from Let's Encrypt) and this app. Expect about 20 minutes, most of it Oracle sign-up.
 

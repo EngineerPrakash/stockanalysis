@@ -81,6 +81,17 @@ class LiveService:
         self.names: dict[str, str] = dict(NAMES)
         self._cfg_lock = threading.Lock()
         self.max_bias = 5.0
+        self.repo = os.getenv("WATCHLIST_REPO") or os.getenv("GITHUB_REPOSITORY", "")
+        self.store = None
+        token = os.getenv("GITHUB_TOKEN", "")
+        if token and self.repo:
+            from .gitstore import GitHubStore
+
+            self.store = GitHubStore(self.repo, token, branch=os.getenv("WATCHLIST_BRANCH", "main"))
+            text = self.store.pull()
+            if text:
+                self.config.write_text(text, encoding="utf-8")
+                log.info("Loaded watchlist from github.com/%s", self.repo)
 
     # ---- watchlist (config.yaml) -----------------------------------------------------
     def _raw_config(self) -> dict:
@@ -107,7 +118,11 @@ class LiveService:
             if not watched:
                 wl[code] = [s for s in wl[code] if s != symbol]
             raw["watchlist"] = wl
-            self.config.write_text(yaml.safe_dump(raw, sort_keys=False, allow_unicode=True))
+            text = yaml.safe_dump(raw, sort_keys=False, allow_unicode=True)
+            self.config.write_text(text)
+            if self.store:
+                verb = "Add" if watched else "Remove"
+                self.store.push_async(text, f"Watchlist: {verb.lower()} {symbol} (from live app) [skip ci]")
         self.cache.put("snapshot", None)
         return wl
 
@@ -171,7 +186,7 @@ class LiveService:
                 markets[code] = {"name": MARKETS[code].name, "updated": _now(), "indices": self.indices(code),
                                  "overview": "", "results": rows}
             return {"generated": _now(), "date": _now()[:10], "demo": self.demo, "errors": errors,
-                    "repo": os.getenv("GITHUB_REPOSITORY", ""), "markets": markets, "live": True}
+                    "repo": self.repo, "markets": markets, "live": True}
         return self.cache.get("snapshot", QUOTE_TTL, build)
 
     def stock(self, symbol: str) -> dict | None:
@@ -281,6 +296,7 @@ def create_app(demo: bool = False, config: str | Path = "config.yaml"):
     @app.get("/api/meta")
     def meta():
         return {"live": True, "demo": demo, "auth": bool(token), "now": _now(),
+                "watchlist_storage": "github" if svc.store else "disk",
                 "markets": {c: {"name": m.name, "currency": m.currency, "timezone": m.timezone,
                                 "count": len(UNIVERSE.get(c, []))} for c, m in MARKETS.items()}}
 
