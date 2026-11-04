@@ -178,7 +178,7 @@ async function renderStock(symbol) {
     <div class="grid g3" style="margin-top:12px">
       <div class="card"><h3>Trade plan</h3><dl class="kv">
         <dt>Entry</dt><dd>~${fmt(r.entry)}</dd><dt>Stop-loss</dt><dd>${fmt(r.stop_loss)}</dd><dt>Target</dt><dd>${fmt(r.target)}</dd>
-        <dt>Reward / risk</dt><dd>${rr.toFixed(1)}</dd><dt>Support</dt><dd>${fmt(r.support)}</dd><dt>Resistance</dt><dd>${fmt(r.resistance)}</dd></dl></div>
+        <dt>Reward / risk</dt><dd>${rr.toFixed(2)}</dd><dt>Support</dt><dd>${fmt(r.support)}</dd><dt>Resistance</dt><dd>${fmt(r.resistance)}</dd></dl></div>
       <div class="card"><h3>Checklist · ${passed(r)}/${r.checklist.length}</h3><ul class="plain check">${r.checklist.map(([k, ok]) => `<li>${ok ? "✅" : "❌"} ${esc(k)}</li>`).join("")}</ul></div>
       <div class="card"><h3>Signals</h3><div class="small muted">Trend: ${esc(r.trend)} · MACD: ${esc(r.macd_state)}</div>
         <ul class="plain" style="margin-top:6px">${r.signals.map((s) => `<li class="up">${esc(s)}</li>`).join("")}${r.risks.map((s) => `<li class="down">${esc(s)}</li>`).join("")}</ul></div>
