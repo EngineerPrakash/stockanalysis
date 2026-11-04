@@ -2,33 +2,44 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Global Stock Analyzer</title>
   <meta name="description" content="Daily technical analysis for India, US, China/Hong Kong and Europe.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232a78d6'/><path d='M7 21l6-6 4 4 8-9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+  <script>
+    try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
   <link rel="stylesheet" href="style.css">
   <script src="lightweight-charts.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
-  <header class="top">
-    <div class="wrap top-inner">
-      <a class="brand" href="#/">📈 Global Stock Analyzer</a>
-      <nav>
-        <a href="#/" data-nav="today">Today</a>
+  <header class="appbar">
+    <div class="wrap appbar-inner">
+      <a class="brand" href="#/" aria-label="Global Stock Analyzer home">
+        <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M7 21l6-6 4 4 8-9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Global Stock Analyzer</span>
+      </a>
+      <nav class="mainnav" aria-label="Main">
+        <a href="#/" data-nav="today">Overview</a>
         <a href="#/history" data-nav="history">History</a>
         <a href="#/about" data-nav="about">About</a>
       </nav>
-      <form id="search" class="search" autocomplete="off">
-        <input id="search-input" list="symbols" placeholder="Find a stock…" aria-label="Find a stock">
+      <form id="search" class="search" role="search" autocomplete="off">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="search-input" list="symbols" placeholder="Search stocks" aria-label="Search stocks">
+        <kbd class="hide-sm">/</kbd>
         <datalist id="symbols"></datalist>
       </form>
+      <button id="theme" class="icon-btn" type="button" aria-label="Toggle colour theme" title="Toggle theme"></button>
     </div>
   </header>
-  <main id="app" class="wrap"><p class="muted">Loading…</p></main>
-  <footer class="wrap muted small">
-    For research and education only. Not investment advice. Data from Yahoo Finance via yfinance; may be delayed.
-    Charts by <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> Lightweight Charts™.
+  <main id="app" class="wrap" aria-live="polite">
+    <div class="loading"><span class="spinner" aria-hidden="true"></span> Loading market data…</div>
+  </main>
+  <footer class="wrap footer">
+    <p>For research and education only. Not investment advice. Prices from Yahoo Finance via yfinance and may be delayed.</p>
+    <p>Charts by <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> Lightweight Charts™ · Open source</p>
   </footer>
 </body>
 </html>
