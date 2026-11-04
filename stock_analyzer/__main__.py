@@ -27,6 +27,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--llm", action="store_true", help="Add commentary from an open-source LLM (Ollama etc.)")
     p.add_argument("--no-news", action="store_true")
     p.add_argument("--notify", action="store_true", help="Push report via configured channels")
+    p.add_argument("--site", metavar="DIR", help="Also update the static web dashboard in DIR (e.g. a gh-pages checkout)")
     p.add_argument("-v", "--verbose", action="store_true")
     args = p.parse_args(argv)
 
@@ -45,6 +46,8 @@ def main(argv: list[str] | None = None) -> int:
         settings.llm = True
     if args.no_news:
         settings.news = False
+    if args.site:
+        settings.keep_series = True
 
     markets = args.markets or (list(settings.watchlist) if args.stocks else None)
     results, errors = run(settings, markets, demo=args.demo)
@@ -54,6 +57,11 @@ def main(argv: list[str] | None = None) -> int:
     paths = write_reports(text, results, args.out, date)
     print(text)
     print(f"\nSaved: {', '.join(str(p) for p in paths.values())}", file=sys.stderr)
+    if args.site:
+        from .site import update_site
+
+        update_site(args.site, results, errors, demo=args.demo)
+        print(f"Web dashboard updated in {args.site}", file=sys.stderr)
 
     if args.notify:
         sent = send_all(f"Daily Stock Analysis {date}", text, paths["html"].read_text(encoding="utf-8"))

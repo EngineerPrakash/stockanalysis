@@ -26,6 +26,7 @@ class Settings:
     news_per_stock: int = 3
     llm: bool = False
     workers: int = 4
+    keep_series: bool = False  # keep price history for the static web dashboard
 
     @classmethod
     def load(cls, path: str | Path) -> "Settings":
@@ -81,8 +82,11 @@ def run(settings: Settings, markets: list[str] | None = None, demo: bool = False
                                     aliases=(d.info.get("shortName", ""),))
             if llm:
                 a.ai_summary = llm.summarize(a)
+            if settings.keep_series:
+                series[sym] = d.history
             return a
 
+        series: dict = {}
         with ThreadPoolExecutor(max_workers=max(1, settings.workers)) as ex:
             results = []
             for res in ex.map(work, symbols):
@@ -91,5 +95,5 @@ def run(settings: Settings, markets: list[str] | None = None, demo: bool = False
 
         overview = llm.market_overview(market.name, indices, results) if (llm and results) else ""
         out.append({"code": code, "name": market.name, "indices": indices,
-                    "results": results, "overview": overview})
+                    "results": results, "overview": overview, "series": series})
     return out, errors

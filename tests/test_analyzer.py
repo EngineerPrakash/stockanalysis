@@ -123,3 +123,32 @@ def test_fetch_news_filters_and_falls_back(monkeypatch):
         {"title": "Unrelated market wrap", "link": "", "source": "FT"}])
     out = fetch_news(P(), "NESN.SW", "Nestlé S.A.", "", 5, aliases=("NESTLE N",))
     assert [n["title"] for n in out] == ["Nestle shares rise", "Nestle names new CEO"]
+
+
+# --- Static web dashboard ------------------------------------------------------------
+import json  # noqa: E402
+
+from stock_analyzer.site import update_site  # noqa: E402
+
+
+def test_site_build_merges_markets_and_days(tmp_path):
+    s = Settings(watchlist=group_symbols(["AAPL", "TCS.NS"]), news=False, keep_series=True)
+    india, _ = run(s, ["india"], demo=True)
+    us, _ = run(s, ["us"], demo=True)
+    update_site(tmp_path, india, [], date="2026-01-01", demo=True)
+    update_site(tmp_path, us, [], date="2026-01-01", demo=True)
+    update_site(tmp_path, us, [], date="2026-01-02", demo=True)
+
+    for f in ("index.html", "app.js", "style.css", "lightweight-charts.js", ".nojekyll"):
+        assert (tmp_path / f).exists()
+    latest = json.loads((tmp_path / "data/latest.json").read_text())
+    assert set(latest["markets"]) == {"india", "us"}  # second run did not wipe India
+    day1 = json.loads((tmp_path / "data/history/2026-01-01.json").read_text())
+    assert set(day1["markets"]) == {"india", "us"}
+    assert json.loads((tmp_path / "data/history/index.json").read_text()) == ["2026-01-02", "2026-01-01"]
+    scores = json.loads((tmp_path / "data/scores.json").read_text())
+    assert [row[0] for row in scores["AAPL"]] == ["2026-01-01", "2026-01-02"]
+    assert len(scores["TCS.NS"]) == 1
+    series = json.loads((tmp_path / "data/series/AAPL.json").read_text())
+    assert len(series["t"]) == len(series["c"]) == 260
+    assert all(v is None or 0 <= v <= 100 for v in series["rsi"])
