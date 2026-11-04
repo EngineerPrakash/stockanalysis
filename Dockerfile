@@ -3,6 +3,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-EXPOSE 8501
-# Default: run the daily report. Override with `streamlit run app.py --server.address=0.0.0.0` for the dashboard.
-CMD ["python", "-m", "stock_analyzer", "--notify"]
+ENV HOST=0.0.0.0 PORT=8000
+EXPOSE 8000
+# Default: the live web app. For a one-off report use: python -m stock_analyzer --notify
+CMD ["python", "-m", "stock_analyzer.server"]

@@ -8,6 +8,8 @@ from __future__ import annotations
 import logging
 import re
 import urllib.parse
+from datetime import timezone
+from email.utils import parsedate_to_datetime
 
 log = logging.getLogger(__name__)
 
@@ -50,12 +52,20 @@ def is_relevant(title: str, kws: set[str]) -> bool:
     return any(re.search(rf"(?<![\w]){re.escape(k)}(?![\w])", t) for k in kws)
 
 
-def google_news(query: str, locale: str = "hl=en-US&gl=US&ceid=US:en", limit: int = 10) -> list[dict]:
+def _iso(published: str) -> str:
+    try:
+        return parsedate_to_datetime(published).astimezone(timezone.utc).isoformat()
+    except (TypeError, ValueError, IndexError):
+        return published or ""
+
+
+def google_news(query: str, locale: str = "hl=en-US&gl=US&ceid=US:en", limit: int = 10,
+                when: str = "3d") -> list[dict]:
     try:
         import feedparser
     except ImportError:
         return []
-    url = f"https://news.google.com/rss/search?q={urllib.parse.quote(query)}+when:3d&{locale}"
+    url = f"https://news.google.com/rss/search?q={urllib.parse.quote(query)}+when:{when}&{locale}"
     try:
         feed = feedparser.parse(url)
     except Exception as e:
@@ -68,7 +78,7 @@ def google_news(query: str, locale: str = "hl=en-US&gl=US&ceid=US:en", limit: in
         if src and title.endswith(f" - {src}"):
             title = title[: -len(src) - 3]
         out.append({"title": title, "link": e.get("link", ""), "source": src,
-                    "published": e.get("published", "")})
+                    "published": _iso(e.get("published", ""))})
     return out
 
 

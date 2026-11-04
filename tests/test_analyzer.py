@@ -152,3 +152,56 @@ def test_site_build_merges_markets_and_days(tmp_path):
     series = json.loads((tmp_path / "data/series/AAPL.json").read_text())
     assert len(series["t"]) == len(series["c"]) == 260
     assert all(v is None or 0 <= v <= 100 for v in series["rsi"])
+
+
+# --- Live server (demo data, no network) ----------------------------------------------
+def _client(tmp_path):
+    import shutil
+    from fastapi.testclient import TestClient
+    from stock_analyzer.server import create_app
+    cfg = tmp_path / "config.yaml"
+    shutil.copy("config.yaml", cfg)
+    return TestClient(create_app(demo=True, config=cfg)), cfg
+
+
+def test_server_markets_and_stock(tmp_path):
+    c, _ = _client(tmp_path)
+    assert c.get("/api/meta").json()["live"] is True
+    for code in ("india", "us", "china", "europe"):
+        m = c.get(f"/api/markets/{code}").json()
+        assert len(m["stocks"]) >= 30 and m["indices"]
+        assert [r["score"] for r in m["stocks"]] == sorted((r["score"] for r in m["stocks"]), reverse=True)
+    assert c.get("/api/markets/mars").status_code == 404
+    s = c.get("/api/stocks/SAP.DE").json()
+    assert s["analysis"]["symbol"] == "SAP.DE" and len(s["series"]["t"]) == 260
+    assert len(c.get("/api/stocks/AAPL/intraday").json()["bars"]) > 10
+    assert c.get("/").status_code == 200 and "Global Stock Analyzer" in c.get("/").text
+
+
+def test_server_watchlist_roundtrip(tmp_path):
+    c, cfg = _client(tmp_path)
+    assert c.put("/api/watchlist/bmw.de").status_code == 200
+    assert "BMW.DE" in c.get("/api/watchlist").json()["europe"]
+    assert "BMW.DE" in cfg.read_text()
+    snap = c.get("/api/snapshot").json()
+    assert "BMW.DE" in [r["symbol"] for r in snap["markets"]["europe"]["results"]]
+    assert next(r for r in c.get("/api/markets/europe").json()["stocks"] if r["symbol"] == "BMW.DE")["watched"]
+    assert c.delete("/api/watchlist/BMW.DE").status_code == 200
+    assert "BMW.DE" not in c.get("/api/watchlist").json()["europe"]
+
+
+def test_server_admin_token(tmp_path, monkeypatch):
+    monkeypatch.setenv("ADMIN_TOKEN", "s3cret")
+    c, _ = _client(tmp_path)
+    assert c.put("/api/watchlist/BMW.DE").status_code == 401
+    assert c.put("/api/watchlist/BMW.DE", headers={"X-Admin-Token": "s3cret"}).status_code == 200
+
+
+def test_server_news_and_search(tmp_path):
+    c, _ = _client(tmp_path)
+    items = c.get("/api/news?market=india").json()["items"]
+    assert items and all(i["market"] == "india" for i in items)
+    times = [i["published"] for i in items]
+    assert times == sorted(times, reverse=True)
+    assert c.get("/api/news?scope=watchlist").json()["items"]
+    assert "HDFCBANK.NS" in [r["symbol"] for r in c.get("/api/search?q=hdfc").json()["results"]]

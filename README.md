@@ -62,7 +62,41 @@ streamlit run app.py
 
 Reports are written to `reports/report_YYYY-MM-DD.{md,html,json}`.
 
-## Live dashboard on GitHub Pages
+## Live app: browse markets, live prices and news
+
+For day-to-day decisions, run the live app. It's the same dashboard, backed by a small FastAPI server that fetches prices and news when you open a page.
+
+```bash
+python -m stock_analyzer.server
+```
+
+Then open http://localhost:8000. Use `--demo` to try it offline.
+
+| Page | What it does |
+|---|---|
+| **Overview** | Your watchlist: market cards, top setups, signals and a sortable table. Refreshes every minute. |
+| **Markets** | Pick **India, US, China/HK or Europe** to see that market's largest stocks (NIFTY 50, US mega-caps, Shanghai/Shenzhen/HK leaders, Europe's largest) with live price, day change, 60-day trend, RSI and score. You can filter by sector, filter or search any ticker, and tap ☆ to add a stock to your watchlist. |
+| **News** | A live feed of headlines grouped by time, refreshed every 2 minutes. Choose a market, and switch between **Market news** and **My watchlist** (headlines for each stock you follow). New headlines are marked. |
+| **Stock** | Any ticker, not only your watchlist. A **1D** intraday chart (5-minute bars) as well as 1M to 1Y daily charts, a live price, the trade plan and checklist, and live news. Includes a ☆ watchlist button. |
+
+Notes:
+
+- **Delays:** Yahoo Finance prices can be delayed by up to 15 minutes depending on the exchange. The server caches prices for about 90 seconds and news for 3 minutes.
+- **Watchlist edits** are saved to `config.yaml`, which the scheduled GitHub report also reads. Commit the file to keep both in sync.
+- **Protect it before sharing:** if anyone else can reach the app, set `ADMIN_TOKEN` and the app will ask for it before changing the watchlist.
+- **API:** docs are at http://localhost:8000/api/docs.
+
+**Hosting options:**
+
+| Where | How | Notes |
+|---|---|---|
+| Your computer | `python -m stock_analyzer.server` | Simplest; open it on your phone over Wi-Fi with `--host 0.0.0.0`. |
+| Docker / a home server or VPS | `docker compose up -d live` | Watchlist edits persist in the mounted `config.yaml`. |
+| Free cloud: [Hugging Face Spaces](https://huggingface.co/docs/hub/spaces-sdks-docker) (Docker) or [Render](https://render.com/) | Point it at this repo; it builds the `Dockerfile`. Set `PORT` to the platform's port and set `ADMIN_TOKEN`. | Free tiers sleep when idle, and watchlist edits reset when the container restarts. |
+
+GitHub Pages can't run this server, because it only hosts static files. The published Pages dashboard stays the daily snapshot and detects that it isn't live.
+
+## Daily snapshot on GitHub Pages
 
 Every scheduled run also publishes a static dashboard to the `gh-pages` branch:
 
@@ -84,7 +118,7 @@ python -m stock_analyzer --site _site
 python -m http.server -d _site 8000
 ```
 
-## Daily use: the web app
+## Streamlit app (optional, local)
 
 ```bash
 streamlit run app.py
@@ -201,6 +235,8 @@ stock_analyzer/
   pipeline.py    orchestration
 app.py           Streamlit web app (navigation)
 ui/              Today, Stock, Watchlist, Reports pages
+stock_analyzer/server.py live web app (FastAPI)
+stock_analyzer/universe.py  browsable stocks per country
 stock_analyzer/site.py   static dashboard builder (GitHub Pages)
 stock_analyzer/web/      dashboard HTML/JS/CSS
 config.yaml      watchlists and options

@@ -22,7 +22,9 @@
       </a>
       <nav class="mainnav" aria-label="Main">
         <a href="#/" data-nav="today">Overview</a>
-        <a href="#/history" data-nav="history">History</a>
+        <a href="#/markets" data-nav="markets">Markets</a>
+        <a href="#/news" data-nav="news">News</a>
+        <a href="#/history" data-nav="history" id="nav-history">History</a>
         <a href="#/about" data-nav="about">About</a>
       </nav>
       <form id="search" class="search" role="search" autocomplete="off">
@@ -31,12 +33,14 @@
         <kbd class="hide-sm">/</kbd>
         <datalist id="symbols"></datalist>
       </form>
+      <span id="mode" class="mode" hidden></span>
       <button id="theme" class="icon-btn" type="button" aria-label="Toggle colour theme" title="Toggle theme"></button>
     </div>
   </header>
   <main id="app" class="wrap" aria-live="polite">
     <div class="loading"><span class="spinner" aria-hidden="true"></span> Loading market data…</div>
   </main>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <footer class="wrap footer">
     <p>For research and education only. Not investment advice. Prices from Yahoo Finance via yfinance and may be delayed.</p>
     <p>Charts by <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> Lightweight Charts™ · Open source</p>
