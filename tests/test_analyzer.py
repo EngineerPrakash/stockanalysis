@@ -79,3 +79,47 @@ def test_demo_is_deterministic():
     a = DemoProvider().fetch("AAPL").history["Close"].iloc[-1]
     b = DemoProvider().fetch("AAPL").history["Close"].iloc[-1]
     assert a == b
+
+
+# --- News relevance (headlines taken from a real run) ---------------------------
+from stock_analyzer.news import clean_name, fetch_news, is_relevant, keywords  # noqa: E402
+
+
+@pytest.mark.parametrize("raw,clean", [
+    ("Kweichow Moutai Co., Ltd.", "Kweichow Moutai"),
+    ("SAP SE                        I", "SAP"),
+    ("Shell plc", "Shell"),
+    ("Apple Inc.", "Apple"),
+    ("Tencent Holdings Limited", "Tencent"),
+])
+def test_clean_name(raw, clean):
+    assert clean_name(raw) == clean
+
+
+@pytest.mark.parametrize("symbol,name,alias,title,expected", [
+    ("NESN.SW", "Nestlé S.A.", "NESTLE N", "How a failed Whole Foods deal built Little Spoon: Founder and CEO", False),
+    ("NESN.SW", "Nestlé S.A.", "NESTLE N", "Nestle cuts sales outlook as coffee prices bite", True),
+    ("AMZN", "Amazon.com, Inc.", "Amazon.com, Inc.", "Could Buying This 1 Cryptocurrency Make You Rich?", False),
+    ("AMZN", "Amazon.com, Inc.", "Amazon.com, Inc.", "Texas Goes Blue: What It Means For Stocks Like MSFT, AMZN, GOOGL", True),
+    ("INFY.NS", "Infosys Limited", "INFOSYS LIMITED", "Why Infosys Can Shrug Off the US Green-Card Suspension", True),
+    ("INFY.NS", "Infosys Limited", "INFOSYS LIMITED", "Mastercard scales in India", False),
+    ("600519.SS", "Kweichow Moutai Co., Ltd.", "KWEICHOW MOUTAI", "China's Top Liquor Brand Reports First Sales Drop", False),
+    ("600519.SS", "Kweichow Moutai Co., Ltd.", "KWEICHOW MOUTAI", "Moutai sales fall for the first time in two decades", True),
+    ("300750.SZ", "Contemporary Amperex Technology Co., Limited", "CATL", "CATL profit jumps on energy storage demand", True),
+    ("MC.PA", "LVMH Moët Hennessy - Louis Vuitton, Société Européenne", "LVMH", "Ferrari Earnings Beat Can Help End Supercar Stock's Skid", False),
+])
+def test_headline_relevance(symbol, name, alias, title, expected):
+    assert is_relevant(title, keywords(symbol, name, (alias,))) is expected
+
+
+def test_fetch_news_filters_and_falls_back(monkeypatch):
+    class P:
+        def news(self, symbol, limit):
+            return [{"title": "Rho Nutrition explores sale", "link": "", "source": "Reuters"},
+                    {"title": "Nestle shares rise", "link": "", "source": "Reuters"}]
+    import stock_analyzer.news as news_mod
+    monkeypatch.setattr(news_mod, "google_news", lambda q, loc, n: [
+        {"title": "Nestle names new CEO", "link": "", "source": "FT"},
+        {"title": "Unrelated market wrap", "link": "", "source": "FT"}])
+    out = fetch_news(P(), "NESN.SW", "Nestlé S.A.", "", 5, aliases=("NESTLE N",))
+    assert [n["title"] for n in out] == ["Nestle shares rise", "Nestle names new CEO"]

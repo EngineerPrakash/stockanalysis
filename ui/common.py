@@ -71,10 +71,10 @@ def analyze_one(symbol: str, period: str, demo: bool, max_bias: float) -> Analys
 
 
 @st.cache_data(ttl=1800, show_spinner=False)
-def news_for(symbol: str, name: str, market: str, demo: bool) -> list[dict]:
+def news_for(symbol: str, name: str, market: str, demo: bool, short_name: str = "") -> list[dict]:
     if demo:
         return []
-    return fetch_news(get_provider(), symbol, name, MARKETS[market].news_locale, 6)
+    return fetch_news(get_provider(), symbol, name, MARKETS[market].news_locale, 6, aliases=(short_name,))
 
 
 @st.cache_data(ttl=3600, show_spinner="Asking the AI model...")

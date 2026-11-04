@@ -75,7 +75,7 @@ if r.fundamentals:
 
 # --- News & AI -----------------------------------------------------------------------
 left, right = st.columns(2)
-news = news_for(symbol, r.name, r.market, demo)
+news = news_for(symbol, r.name, r.market, demo, r.fundamentals.get("shortName", ""))
 with left:
     st.subheader("News")
     if not news:

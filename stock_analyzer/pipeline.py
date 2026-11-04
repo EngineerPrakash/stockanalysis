@@ -77,7 +77,8 @@ def run(settings: Settings, markets: list[str] | None = None, demo: bool = False
             except Exception as e:
                 return f"{sym}: analysis failed ({e})"
             if settings.news and not demo:
-                a.news = fetch_news(provider, sym, d.name, market.news_locale, settings.news_per_stock)
+                a.news = fetch_news(provider, sym, d.name, market.news_locale, settings.news_per_stock,
+                                    aliases=(d.info.get("shortName", ""),))
             if llm:
                 a.ai_summary = llm.summarize(a)
             return a

@@ -61,7 +61,7 @@ class YahooProvider:
                         info[k] = raw[k]
             except Exception as e:  # fundamentals are optional
                 log.debug("info failed for %s: %s", symbol, e)
-            name = info.get("shortName") or info.get("longName") or symbol
+            name = " ".join(str(info.get("longName") or info.get("shortName") or symbol).split())
             return StockData(symbol, hist, name, info)
         except Exception as e:
             log.error("Failed to fetch %s: %s", symbol, e)
@@ -77,8 +77,10 @@ class YahooProvider:
             c = it.get("content", it)
             title = c.get("title")
             link = (c.get("canonicalUrl") or {}).get("url") if isinstance(c.get("canonicalUrl"), dict) else c.get("link")
+            prov = c.get("provider")
+            source = (prov.get("displayName") if isinstance(prov, dict) else None) or c.get("publisher") or "Yahoo Finance"
             if title:
-                out.append({"title": title, "link": link or "", "source": "Yahoo Finance"})
+                out.append({"title": title, "link": link or "", "source": source})
         return out
 
 
