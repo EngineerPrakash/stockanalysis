@@ -43,6 +43,9 @@ tmp = Path(tempfile.mkdtemp())
 shutil.copy(ROOT / "config.yaml", tmp / "config.yaml")
 c = TestClient(create_app(demo=False, config=tmp / "config.yaml"))
 
+import atexit  # noqa: E402
+
+atexit.register(lambda: (out / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8"))
 log("# Live app smoke test (real data)")
 log(f"Run at {time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime())}")
 
@@ -50,9 +53,9 @@ log("\n## Markets")
 for code in ("india", "us", "china", "europe"):
     t = time.time()
     r = c.get(f"/api/markets/{code}")
-    m = r.json() if r.ok else {}
+    m = r.json() if r.is_success else {}
     stocks, missing = m.get("stocks", []), m.get("unavailable", [])
-    check(r.ok and len(stocks) >= 20, f"{code}: {len(stocks)} stocks with data, {len(m.get('indices', []))} indices, {time.time()-t:.1f}s")
+    check(r.is_success and len(stocks) >= 20, f"{code}: {len(stocks)} stocks with data, {len(m.get('indices', []))} indices, {time.time()-t:.1f}s")
     if missing:
         log(f"  - no data: {', '.join(missing)}")
     for s in stocks[:3]:
@@ -68,7 +71,7 @@ check(n >= 15, f"{n} watchlist stocks analysed; errors: {snap['errors'] or 'none
 log("\n## Stock pages")
 for sym in ("RELIANCE.NS", "AAPL", "0700.HK", "SAP.DE"):
     r = c.get(f"/api/stocks/{sym}")
-    if not r.ok:
+    if not r.is_success:
         check(False, f"{sym}: HTTP {r.status_code}")
         continue
     a = r.json()["analysis"]
