@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-command setup for a fresh Ubuntu server (tested for Oracle Cloud "Always Free").
+# One-command setup for a fresh Ubuntu server (written for Oracle Cloud "Always Free").
 #
 #   curl -fsSL https://raw.githubusercontent.com/EngineerPrakash/stockanalysis/main/deploy/setup.sh | bash
 #
