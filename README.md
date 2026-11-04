@@ -1,7 +1,6 @@
 # 📈 Global Stock Analyzer
 
 Daily stock analysis for **India, US, China/Hong Kong and Europe**, built only with open-source tools.
-Inspired by [ZhuLinsen/daily_stock_analysis](https://github.com/ZhuLinsen/daily_stock_analysis).
 
 Each run produces a decision dashboard for your watchlist:
 
