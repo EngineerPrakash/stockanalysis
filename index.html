@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Global Stock Analyzer</title>
+  <meta name="description" content="Daily technical analysis for India, US, China/Hong Kong and Europe.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+  <link rel="stylesheet" href="style.css">
+  <script src="lightweight-charts.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-inner">
+      <a class="brand" href="#/">📈 Global Stock Analyzer</a>
+      <nav>
+        <a href="#/" data-nav="today">Today</a>
+        <a href="#/history" data-nav="history">History</a>
+        <a href="#/about" data-nav="about">About</a>
+      </nav>
+      <form id="search" class="search" autocomplete="off">
+        <input id="search-input" list="symbols" placeholder="Find a stock…" aria-label="Find a stock">
+        <datalist id="symbols"></datalist>
+      </form>
+    </div>
+  </header>
+  <main id="app" class="wrap"><p class="muted">Loading…</p></main>
+  <footer class="wrap muted small">
+    For research and education only. Not investment advice. Data from Yahoo Finance via yfinance; may be delayed.
+    Charts by <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> Lightweight Charts™.
+  </footer>
+</body>
+</html>
