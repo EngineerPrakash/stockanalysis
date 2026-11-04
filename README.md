@@ -96,6 +96,52 @@ Notes:
 
 GitHub Pages can't run this server, because it only hosts static files. The published Pages dashboard stays the daily snapshot and detects that it isn't live.
 
+## Go live for free (Oracle Cloud + open-source stack)
+
+This puts the live app on the internet at an HTTPS address you can open from your phone anywhere. It costs nothing on Oracle Cloud's **Always Free** tier, and everything running on the server is open source: Ubuntu, Docker, Caddy (automatic HTTPS from Let's Encrypt) and this app. Expect about 20 minutes, most of it Oracle sign-up.
+
+**1. Create a free account.** Sign up at https://www.oracle.com/cloud/free/. Oracle asks for a card to verify identity; Always Free resources aren't charged.
+
+**2. Create the server.** Go to Menu → Compute → Instances → **Create instance**.
+- **Image:** Ubuntu 24.04.
+- **Shape:** *Ampere A1* (ARM) with 1–4 OCPUs and 6–24 GB memory, all marked "Always Free eligible". If A1 says "out of capacity", pick another availability domain or try again later.
+- **SSH key:** click **Save private key** and keep the file.
+- Click **Create**, then copy the server's **Public IP address**.
+
+**3. Open the web ports.** On the instance page, click the subnet, then the **Default Security List**, then **Add Ingress Rules**:
+- Source CIDR `0.0.0.0/0`, IP protocol TCP, destination port `80`.
+- Add a second rule the same way with destination port `443`.
+
+**4. Connect and run the setup.** From your computer's terminal, using the key file from step 2:
+
+```bash
+ssh -i path/to/your-key.key ubuntu@YOUR_PUBLIC_IP
+```
+
+Then, on the server:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/EngineerPrakash/stockanalysis/main/deploy/setup.sh | bash
+```
+
+The script installs Docker, opens the server's firewall, starts the app with HTTPS and prints two things:
+
+- **Your address**, like `https://203-0-113-10.sslip.io`. [sslip.io](https://sslip.io) is a free hostname that points at your IP, so you don't need to buy a domain.
+- **Your admin token**, which the app asks for the first time you add or remove a watchlist stock. Keep it private.
+
+Open the address on your phone and bookmark it, or use the browser's "Add to Home Screen".
+
+**Later:**
+
+| To | Do this on the server |
+|---|---|
+| Update to the latest code | `bash ~/stockanalysis/deploy/update.sh` |
+| See logs | `cd ~/stockanalysis/deploy && sudo docker compose logs -f app` |
+| Use your own domain | Point its DNS A record at the IP, set `DOMAIN=yourdomain.com` in `~/stockanalysis/deploy/.env`, then run `update.sh` |
+| Find the admin token again | `cat ~/stockanalysis/deploy/.env` |
+
+Your watchlist is saved in `~/stockanalysis/deploy/data/config.yaml` and survives updates and restarts. The same script works on any Ubuntu server, such as Hetzner or DigitalOcean, or a home machine with ports 80 and 443 forwarded.
+
 ## Daily snapshot on GitHub Pages
 
 Every scheduled run also publishes a static dashboard to the `gh-pages` branch:
@@ -235,6 +281,7 @@ stock_analyzer/
   pipeline.py    orchestration
 app.py           Streamlit web app (navigation)
 ui/              Today, Stock, Watchlist, Reports pages
+deploy/                  one-command production setup (Docker + Caddy HTTPS)
 stock_analyzer/server.py live web app (FastAPI)
 stock_analyzer/universe.py  browsable stocks per country
 stock_analyzer/site.py   static dashboard builder (GitHub Pages)

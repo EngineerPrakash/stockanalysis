@@ -1,0 +1,6 @@
+# Caddy (open source, Apache-2.0) serves the app over HTTPS and renews the
+# Let's Encrypt certificate automatically. DOMAIN comes from deploy/.env.
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:8000
+}
